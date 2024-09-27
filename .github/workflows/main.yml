@@ -1,13 +1,13 @@
-name: CI
+name: Build and release
 
 on: [workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-14]
+    name: Build and release tweak
+    runs-on: macos-14
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -37,8 +37,18 @@ jobs:
           rm -f packages/*
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
 
-      - name: Upload package
-        uses: actions/upload-artifact@v4
+      - name: Parse control file version
+        id: parse_control
+        run: |
+          version=$(sed -n 's/^Version: //p' control | sed 's/~/-/g')
+          echo "TWEAK_VERSION=$version" >> "$GITHUB_OUTPUT"
+          
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          TWEAK_VERSION: ${{ steps.parse_control.outputs.TWEAK_VERSION }}
         with:
-          name: "Package built by ${{ matrix.os }}"
-          path: ${{ github.workspace }}/packages/*.deb
+          tag_name: v${{ env.TWEAK_VERSION }}
+          name: v${{ env.TWEAK_VERSION }}
+          files: packages/*.deb
