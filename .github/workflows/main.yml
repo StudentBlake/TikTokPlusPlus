@@ -24,6 +24,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/theos
           key: ${{ runner.os }}-${{ env.upstream_heads }}
+          save-always: true
 
       - name: Prepare Theos
         uses: Randomblock1/theos-action@main
