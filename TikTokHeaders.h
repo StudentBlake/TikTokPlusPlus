@@ -256,6 +256,7 @@
 @property(nonatomic, assign) BOOL elementsHidden;
 @property (nonatomic, strong) JGProgressHUD *hud;
 @property (nonatomic, retain) NSString *fileextension;
+@property (nonatomic, retain) UIProgressView *progressView;
 - (void)addHandleLongPress;
 - (void)handleLongPress:(UILongPressGestureRecognizer *)sender;
 - (void)addHideElementButton;
@@ -270,6 +271,7 @@
 - (void)copyDecription:(AWEAwemeBaseViewController *)rootVC;
 - (void)downloadPhotos:(TTKPhotoAlbumDetailCellController *)rootVC photoIndex:(unsigned long)index;
 - (void)downloadPhotos:(TTKPhotoAlbumDetailCellController *)rootVC;
+- (void)tapDownloadVideo;
 @end
 @interface AWEFeedViewTemplateCell () <BHDownloadDelegate, BHMultipleDownloadDelegate>
 @end
@@ -283,6 +285,7 @@
 @property(nonatomic, assign) BOOL elementsHidden;
 @property (nonatomic, strong) JGProgressHUD *hud;
 @property (nonatomic, retain) NSString *fileextension;
+@property (nonatomic, retain) UIProgressView *progressView;
 - (void)addHandleLongPress;
 - (void)handleLongPress:(UILongPressGestureRecognizer *)sender;
 - (void)addHideElementButton;

@@ -343,6 +343,144 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %end
 
+%hook TIKTOKRegionManager
++ (NSString *)systemRegion {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return @"JP";
+        }
+        return %orig;
+    }
+    return %orig;
+}
++ (id)storeRegion {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return @"JP";
+        }
+        return %orig;
+    }
+    return %orig;
+}
+%end
+
+%hook ATSRegionCacheManager
+- (id)getRegion {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (id)storeRegionFromCache {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (id)storeRegionFromTTNetNotification:(id)arg1 {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig([selectedRegion[@"code"] lowercaseString]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+- (id)region {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+%end
+
+%hook TTKStoreRegionModel
+- (id)storeRegion {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setStoreRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig(selectedRegion[@"code"]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+%end
+
+%hook TTInstallIDManager
+- (id)currentAppRegion {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setCurrentAppRegion:(id)agr1 {
+    %orig(@"JP");
+}
+%end
+
+%hook BDInstallGlobalConfig
+- (id)currentAppRegion {
+ if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setCurrentAppRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig(selectedRegion[@"code"]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+%end
+
 %hook ACCCreationPublishAction
 - (BOOL)is_open_hd {
     if ([BHIManager uploadHD]) {
@@ -723,8 +861,14 @@ static BOOL isAuthenticationShowed = FALSE;
 %property (nonatomic, strong) JGProgressHUD *hud;
 %property(nonatomic, assign) BOOL elementsHidden;
 %property (nonatomic, retain) NSString *fileextension;
+%property (nonatomic, retain) UIProgressView *progressView;
 - (void)configWithModel:(id)model {
     %orig;
+    self.hud.interactionType = JGProgressHUDInteractionTypeBlockAllTouches;
+    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
+    self.hud.square = NO;
+    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+    self.hud.indicatorView = self.progressView;
     [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
@@ -736,6 +880,11 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 - (void)configureWithModel:(id)model {
     %orig;
+    self.hud.interactionType = JGProgressHUDInteractionTypeBlockAllTouches;
+    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
+    self.hud.square = NO;
+    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+    self.hud.indicatorView = self.progressView;
     [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
@@ -765,13 +914,12 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %new - (void)downloadHDVideo:(AWEAwemeBaseViewController *)rootVC {
     NSString *as = rootVC.model.itemID;
-    NSURL *downloadableURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://tikwm.com/video/media/play/%@.mp4", as]];
+    NSURL *downloadableURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://tikwm.com/video/media/hdplay/%@.mp4", as]];
     self.fileextension = [rootVC.model.video.playURL bestURLtoDownloadFormat];
     if (downloadableURL) {
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -784,7 +932,6 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -800,7 +947,6 @@ static BOOL isAuthenticationShowed = FALSE;
                     BHDownload *dwManager = [[BHDownload alloc] init];
                     [dwManager downloadFileWithURL:downloadableURL];
                     [dwManager setDelegate:self];
-                    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
                     self.hud.textLabel.text = @"Downloading";
                      [self.hud showInView:topMostController().view];
                 }
@@ -825,7 +971,6 @@ static BOOL isAuthenticationShowed = FALSE;
             BHMultipleDownload *dwManager = [[BHMultipleDownload alloc] init];
             [dwManager setDelegate:self];
             [dwManager downloadFiles:fileURLs];
-            self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
             self.hud.textLabel.text = @"Downloading";
             [self.hud showInView:topMostController().view];
 
@@ -838,7 +983,6 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1093,7 +1237,12 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 
 %new - (void)downloadProgress:(float)progress {
+    self.progressView.progress = progress;
     self.hud.detailTextLabel.text = [BHIManager getDownloadingPersent:progress];
+    self.hud.tapOutsideBlock = ^(JGProgressHUD * _Nonnull HUD) {
+        self.hud.textLabel.text = @"Backgrounding ✌️";
+        [self.hud dismissAfterDelay:0.4];
+    };
 }
 %new - (void)downloadDidFinish:(NSURL *)filePath Filename:(NSString *)fileName {
     NSString *DocPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true).firstObject;
@@ -1119,10 +1268,15 @@ static BOOL isAuthenticationShowed = FALSE;
 %hook AWEAwemeDetailTableViewCell
 %property (nonatomic, strong) JGProgressHUD *hud;
 %property(nonatomic, assign) BOOL elementsHidden;
+%property (nonatomic, retain) UIProgressView *progressView;
 %property (nonatomic, retain) NSString *fileextension;
 - (void)configWithModel:(id)model {
     %orig;
     [self addHandleLongPress];
+    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
+    self.hud.square = NO;
+    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+    self.hud.indicatorView = self.progressView;
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
         [self addDownloadButton];
@@ -1133,6 +1287,10 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 - (void)configureWithModel:(id)model {
     %orig;
+    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
+    self.hud.square = NO;
+    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
+    self.hud.indicatorView = self.progressView;
     [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
@@ -1162,13 +1320,12 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %new - (void)downloadHDVideo:(AWEAwemeBaseViewController *)rootVC {
     NSString *as = rootVC.model.itemID;
-    NSURL *downloadableURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://tikwm.com/video/media/play/%@.mp4", as]];
+    NSURL *downloadableURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://tikwm.com/video/media/hdplay/%@.mp4", as]];
     self.fileextension = [rootVC.model.video.playURL bestURLtoDownloadFormat];
     if (downloadableURL) {
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1181,7 +1338,6 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1194,7 +1350,6 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
-        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1315,6 +1470,11 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 
 %new - (void)downloadProgress:(float)progress {
+        self.hud.tapOutsideBlock = ^(JGProgressHUD * _Nonnull HUD) {
+        self.hud.textLabel.text = @"Backgrounding ✌️";
+        [self.hud dismissAfterDelay:0.4];
+    };
+    self.progressView.progress = progress;
     self.hud.detailTextLabel.text = [BHIManager getDownloadingPersent:progress];
 }
 %new - (void)downloadDidFinish:(NSURL *)filePath Filename:(NSString *)fileName {
