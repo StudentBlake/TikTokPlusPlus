@@ -15,7 +15,7 @@ jobs:
           submodules: true
 
       - name: Install Dependencies
-        run: brew install ldid dpkg make subversion
+        run: brew install ldid dpkg make
 
       - name: Set PATH environment variable
         run: echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH 
@@ -27,13 +27,23 @@ jobs:
           ref: master
           path: theos
           submodules: recursive
-      
-      - name: Download iOS 15.5 SDK
+
+      - name: Download SDK
         run: |
-          svn checkout -q https://github.com/chrisharper22/sdks/trunk/iPhoneOS15.5.sdk
-          mv *.sdk $THEOS/sdks
+          TEMP_DIR=$(mktemp -d)
+          git clone --no-checkout $GIT_URL $TEMP_DIR
+          cd $TEMP_DIR
+          git sparse-checkout init --cone
+          git sparse-checkout set $FOLDER_PATH
+          git checkout $GIT_BRANCH
+          cd ..
+          mv $TEMP_DIR/$FOLDER_PATH $DEST_FOLDER
+          rm -rf $TEMP_DIR
         env:
-          THEOS: ${{ github.workspace }}/theos
+          GIT_URL: https://github.com/chrisharper22/sdks
+          GIT_BRANCH: main
+          FOLDER_PATH: iPhoneOS15.5.sdk
+          DEST_FOLDER: ${{ github.workspace }}/theos/sdks
 
       - name: Build package
         run: |
