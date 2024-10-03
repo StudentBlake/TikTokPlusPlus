@@ -15,7 +15,7 @@ jobs:
           submodules: true
 
       - name: Install Dependencies
-        run: brew install ldid dpkg make
+        run: brew install ldid dpkg make subversion
 
       - name: Set PATH environment variable
         run: echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH 
@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: theos/theos
+          ref: master
           path: theos
           submodules: recursive
       
