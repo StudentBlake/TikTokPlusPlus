@@ -46,7 +46,7 @@ jobs:
           DEST_FOLDER: ${{ github.workspace }}/theos/sdks
 
       - name: Setup Theos Jailed
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
         with:
           repository: qnblackcat/theos-jailed
           ref: master
