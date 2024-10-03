@@ -40,9 +40,9 @@ jobs:
           mv $TEMP_DIR/$FOLDER_PATH $DEST_FOLDER
           rm -rf $TEMP_DIR
         env:
-          GIT_URL: https://github.com/chrisharper22/sdks
-          GIT_BRANCH: main
-          FOLDER_PATH: iPhoneOS15.5.sdk
+          GIT_URL: https://github.com/xybp888/iOS-SDKs
+          GIT_BRANCH: master
+          FOLDER_PATH: iPhoneOS18.0.sdk
           DEST_FOLDER: ${{ github.workspace }}/theos/sdks
 
       - name: Setup Theos Jailed
