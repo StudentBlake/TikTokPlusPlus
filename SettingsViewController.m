@@ -78,7 +78,13 @@
     
     [linkListCell setProperty:keyText forKey:@"key"];
     [linkListCell setProperty:defValue forKey:@"default"];
-    [linkListCell setValues:validValues titles:validTitles];
+    //[linkListCell setValues:validValues titles:validTitles];
+    // Set the values (corresponding to the valid region codes)
+    linkListCell.values = validValues;
+
+    // Create and set the title dictionary (mapping the values to the display titles)
+    NSDictionary *titleDict = [NSDictionary dictionaryWithObjects:validTitles forKeys:validValues];
+    linkListCell.titleDictionary = titleDict;
     
     if (rule != nil) {
         [linkListCell setProperty:rule forKey:@"dynamicRule"];
