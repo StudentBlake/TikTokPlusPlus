@@ -29,35 +29,14 @@ jobs:
           submodules: recursive
 
       - name: Download SDK
-        run: |
-          TEMP_DIR=$(mktemp -d)
-          git clone --no-checkout $GIT_URL $TEMP_DIR
-          cd $TEMP_DIR
-          git sparse-checkout init --cone
-          git sparse-checkout set $FOLDER_PATH
-          git checkout $GIT_BRANCH
-          cd ..
-          mv $TEMP_DIR/$FOLDER_PATH $DEST_FOLDER
-          rm -rf $TEMP_DIR
-        env:
-          GIT_URL: https://github.com/xybp888/iOS-SDKs
-          GIT_BRANCH: master
-          FOLDER_PATH: iPhoneOS18.0.sdk
-          DEST_FOLDER: ${{ github.workspace }}/theos/sdks
-
-      - name: Setup Theos Jailed
         uses: actions/checkout@v4
         with:
-          repository: qnblackcat/theos-jailed
+          repository: theos/sdks
           ref: master
-          path: theos-jailed
-          submodules: recursive
-
-      - name: Install Theos Jailed
-        run: |
-          ./theos-jailed/install
-        env:
-          THEOS: ${{ github.workspace }}/theos
+          path: theos/sdks
+          sparse-checkout: |
+            iPhoneOS16.5.sdk
+          sparse-checkout-cone-mode: false
 
       - name: Build package
         run: |
