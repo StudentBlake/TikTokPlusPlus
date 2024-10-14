@@ -44,3 +44,19 @@ jobs:
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
         env:
           THEOS: ${{ github.workspace }}/theos
+
+      - name: Parse control file version
+        id: parse_control
+        run: |
+          version=$(sed -n 's/^Version: //p' control | sed 's/~/-/g')
+          echo "TWEAK_VERSION=$version" >> "$GITHUB_OUTPUT"
+          
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        env:
+          TWEAK_VERSION: ${{ steps.parse_control.outputs.TWEAK_VERSION }}
+        with:
+          tag_name: v${{ env.TWEAK_VERSION }}
+          name: v${{ env.TWEAK_VERSION }}
+          files: packages/*.deb
