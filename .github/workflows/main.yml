@@ -14,28 +14,36 @@ jobs:
         with:
           submodules: true
 
-      - name: Check cache
-        run: |
-          echo upstream_heads=`git ls-remote https://github.com/theos/theos | head -n 1 | cut -f 1`-`git ls-remote https://github.com/xybp888/iOS-SDKs | head -n 1 | cut -f 1` >> $GITHUB_ENV
+      - name: Install Dependencies
+        run: brew install ldid dpkg make
 
-      - name: Use cache
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/theos
-          key: ${{ runner.os }}-${{ env.upstream_heads }}
-          save-always: true
+      - name: Set PATH environment variable
+        run: echo "$(brew --prefix make)/libexec/gnubin" >> $GITHUB_PATH 
 
-      - name: Prepare Theos
-        uses: Randomblock1/theos-action@main
+      - name: Setup Theos
+        uses: actions/checkout@v4
         with:
-          theos-sdks: 'https://github.com/xybp888/iOS-SDKs'
-          theos-sdks-branch: 'master'
+          repository: theos/theos
+          ref: master
+          path: theos
+          submodules: recursive
+
+      - name: Download SDK
+        uses: actions/checkout@v4
+        with:
+          repository: theos/sdks
+          ref: master
+          path: theos/sdks
+          sparse-checkout: |
+            iPhoneOS16.5.sdk
+          sparse-checkout-cone-mode: false
 
       - name: Build package
         run: |
           rm -f packages/*
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+        env:
+          THEOS: ${{ github.workspace }}/theos
 
       - name: Parse control file version
         id: parse_control

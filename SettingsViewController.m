@@ -7,6 +7,10 @@
 
 #import "SettingsViewController.h"
 
+@interface PSSpecifier (Custom)
+- (void)setValues:(id)arg1 titles:(id)arg2;
+@end
+
 @interface SettingsViewController ()
 @property (nonatomic, assign) BOOL hasDynamicSpecifiers;
 @property (nonatomic, retain) NSMutableDictionary *dynamicSpecifiers;
@@ -78,8 +82,7 @@
     
     [linkListCell setProperty:keyText forKey:@"key"];
     [linkListCell setProperty:defValue forKey:@"default"];
-    [linkListCell setProperty:validValues forKey:@"validValues"];
-    [linkListCell setProperty:validTitles forKey:@"validTitles"];
+    [linkListCell setValues:validValues titles:validTitles];
     
     if (rule != nil) {
         [linkListCell setProperty:rule forKey:@"dynamicRule"];
