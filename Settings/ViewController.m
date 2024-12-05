@@ -308,10 +308,6 @@
                 return [self createSwitchCellWithTitle:@"App Lock"
                                                 Detail:@"Lock the app with a passcode"
                                                    Key:@"padlock"];
-            case 9:
-                return [self createSwitchCellWithTitle:@"Enable Flex"
-                                                Detail:@"Developers Only, DON'T touch it if you don't know what you are doing."
-                                                   Key:@"flex_enebaled"];
             default:
                 break;
         }
