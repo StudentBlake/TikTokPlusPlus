@@ -11,6 +11,9 @@ static void showConfirmation(void (^okHandler)(void)) {
 %hook AppDelegate
 - (_Bool)application:(UIApplication *)application didFinishLaunchingWithOptions:(id)arg2 {
     %orig;
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"flex_enebaled"]) {
+        [[%c(FLEXManager) performSelector:@selector(sharedManager)] performSelector:@selector(showExplorer)];
+    }
     if (![[NSUserDefaults standardUserDefaults] objectForKey:@"BHTikTokFirstRun"]) {
         [[NSUserDefaults standardUserDefaults] setValue:@"BHTikTokFirstRun" forKey:@"BHTikTokFirstRun"];
         [[NSUserDefaults standardUserDefaults] setBool:true forKey:@"hide_ads"];
@@ -45,13 +48,18 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %end
 
-%hook AWEPlayVideoPlayerController
+%hook TTKMediaSpeedControlService
 - (void)setPlaybackRate:(CGFloat)arg1 {
-     if ([BHIManager speedEnabled]) {
-        NSNumber *number = [BHIManager selectedSpeed];
-        %orig([number floatValue]);
+    NSNumber *speed = [BHIManager selectedSpeed];
+    if (![BHIManager speedEnabled] || [speed isEqualToNumber:@1]) {
+        return %orig;
+    }
+    if ([BHIManager speedEnabled]) {
+        if ([BHIManager selectedSpeed]) {
+            return %orig([speed floatValue]);
+        }
     } else {
-        %orig;
+        return %orig;
     }
 }
 %end
@@ -248,7 +256,7 @@ static BOOL isAuthenticationShowed = FALSE;
 %hook TTKSettingsBaseCellPlugin
 - (void)didSelectItemAtIndex:(NSInteger)index {
     if ([self.itemModel.identifier isEqualToString:@"bhtiktok_settings"]) {
-        UINavigationController *BHTikTokSettings = [[UINavigationController alloc] initWithRootViewController:[[SettingsViewController alloc] init]];
+        UINavigationController *BHTikTokSettings = [[UINavigationController alloc] initWithRootViewController:[[ViewController alloc] init]];
         [topMostController() presentViewController:BHTikTokSettings animated:true completion:nil];
     } else {
         return %orig;
@@ -353,13 +361,64 @@ static BOOL isAuthenticationShowed = FALSE;
     return %orig;
 }
 %end
-
+%hook TTKStoreRegionService
+- (id)storeRegion {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (id)getStoreRegion {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setStoreRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig([selectedRegion[@"code"] lowercaseString]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+%end
 %hook TIKTOKRegionManager
 + (NSString *)systemRegion {
     if ([BHIManager regionChangingEnabled]) {
         if ([BHIManager selectedRegion]) {
             NSDictionary *selectedRegion = [BHIManager selectedRegion];
-            return @"JP";
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
++ (id)region {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
++ (id)mccmnc {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [NSString stringWithFormat:@"%@%@", selectedRegion[@"mcc"], selectedRegion[@"mnc"]];
         }
         return %orig;
     }
@@ -369,7 +428,71 @@ static BOOL isAuthenticationShowed = FALSE;
     if ([BHIManager regionChangingEnabled]) {
         if ([BHIManager selectedRegion]) {
             NSDictionary *selectedRegion = [BHIManager selectedRegion];
-            return @"JP";
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
++ (id)currentRegionV2 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
++ (id)localRegion {
+        if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"code"];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+
+%end
+
+%hook TTKPassportAppStoreRegionModel
+- (id)storeRegion {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return [selectedRegion[@"code"] lowercaseString];
+        }
+        return %orig;
+    }
+    return %orig;
+}
+- (void)setStoreRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig([selectedRegion[@"code"] lowercaseString]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+- (void)setLocalizedCountryName:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig(selectedRegion[@"name"]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
+}
+- (id)localizedCountryName {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return selectedRegion[@"name"];
         }
         return %orig;
     }
@@ -464,8 +587,15 @@ static BOOL isAuthenticationShowed = FALSE;
     }
     return %orig;
 }
-- (void)setCurrentAppRegion:(id)agr1 {
-    %orig(@"JP");
+- (void)setCurrentAppRegion:(id)arg1 {
+    if ([BHIManager regionChangingEnabled]) {
+        if ([BHIManager selectedRegion]) {
+            NSDictionary *selectedRegion = [BHIManager selectedRegion];
+            return %orig(selectedRegion[@"code"]);
+        }
+        return %orig(arg1);
+    }
+    return %orig(arg1);
 }
 %end
 
@@ -911,6 +1041,22 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %end
 
+%hook AWELiveFeedEntranceView
+- (void)switchStateWithTapped:(BOOL)arg1 {
+    if (![BHIManager liveActionEnabled] || [BHIManager selectedLiveAction] == 0) {
+        %orig;
+    } else if ([BHIManager liveActionEnabled] && [[BHIManager selectedLiveAction] intValue] == 1) {
+        UINavigationController *BHTikTokSettings = [[UINavigationController alloc] initWithRootViewController:[[ViewController alloc] init]];
+        [topMostController() presentViewController:BHTikTokSettings animated:true completion:nil];
+    } 
+    else {
+        %orig;
+    }
+
+}
+%end
+
+
 %hook AWEFeedViewTemplateCell
 %property (nonatomic, strong) JGProgressHUD *hud;
 %property(nonatomic, assign) BOOL elementsHidden;
@@ -918,12 +1064,6 @@ static BOOL isAuthenticationShowed = FALSE;
 %property (nonatomic, retain) UIProgressView *progressView;
 - (void)configWithModel:(id)model {
     %orig;
-    self.hud.interactionType = JGProgressHUDInteractionTypeBlockAllTouches;
-    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
-    self.hud.square = NO;
-    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
-    self.hud.indicatorView = self.progressView;
-    [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
         [self addDownloadButton];
@@ -934,12 +1074,6 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 - (void)configureWithModel:(id)model {
     %orig;
-    self.hud.interactionType = JGProgressHUDInteractionTypeBlockAllTouches;
-    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
-    self.hud.square = NO;
-    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
-    self.hud.indicatorView = self.progressView;
-    [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
         [self addDownloadButton];
@@ -974,6 +1108,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -986,6 +1121,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1001,6 +1137,7 @@ static BOOL isAuthenticationShowed = FALSE;
                     BHDownload *dwManager = [[BHDownload alloc] init];
                     [dwManager downloadFileWithURL:downloadableURL];
                     [dwManager setDelegate:self];
+                    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
                     self.hud.textLabel.text = @"Downloading";
                      [self.hud showInView:topMostController().view];
                 }
@@ -1025,6 +1162,7 @@ static BOOL isAuthenticationShowed = FALSE;
             BHMultipleDownload *dwManager = [[BHMultipleDownload alloc] init];
             [dwManager setDelegate:self];
             [dwManager downloadFiles:fileURLs];
+            self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
             self.hud.textLabel.text = @"Downloading";
             [self.hud showInView:topMostController().view];
 
@@ -1037,6 +1175,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1326,11 +1465,6 @@ static BOOL isAuthenticationShowed = FALSE;
 %property (nonatomic, retain) NSString *fileextension;
 - (void)configWithModel:(id)model {
     %orig;
-    [self addHandleLongPress];
-    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
-    self.hud.square = NO;
-    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
-    self.hud.indicatorView = self.progressView;
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
         [self addDownloadButton];
@@ -1341,11 +1475,6 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 - (void)configureWithModel:(id)model {
     %orig;
-    self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
-    self.hud.square = NO;
-    self.progressView = [[UIProgressView alloc] initWithProgressViewStyle:UIProgressViewStyleDefault];
-    self.hud.indicatorView = self.progressView;
-    [self addHandleLongPress];
     self.elementsHidden = false;
     if ([BHIManager downloadButton]){
         [self addDownloadButton];
@@ -1380,6 +1509,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1392,6 +1522,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1404,6 +1535,7 @@ static BOOL isAuthenticationShowed = FALSE;
         BHDownload *dwManager = [[BHDownload alloc] init];
         [dwManager downloadFileWithURL:downloadableURL];
         [dwManager setDelegate:self];
+        self.hud = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
         self.hud.textLabel.text = @"Downloading";
         [self.hud showInView:topMostController().view];
     }
@@ -1716,11 +1848,6 @@ static BOOL isAuthenticationShowed = FALSE;
 }
 %end
 
-%hook HBForceCepheiPrefs
-+ (BOOL)forceCepheiPrefsWhichIReallyNeedToAccessAndIKnowWhatImDoingISwear {
-    return YES;
-}
-%end
 
 %ctor {
     jailbreakPaths = @[

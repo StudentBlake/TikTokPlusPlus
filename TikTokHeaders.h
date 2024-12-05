@@ -8,6 +8,8 @@
 #import "BHMultipleDownload.h"
 #import "JGProgressHUD/JGProgressHUD.h"
 #import <Photos/Photos.h>
+#import "Settings/ViewController.h"
+#import "Settings/PlaybackSpeed.h"
 
 @interface AppDelegate : NSObject <UIApplicationDelegate>
 @end
@@ -21,6 +23,7 @@
 
 @interface TTKProfileRootView: UIView
 @end
+
 
 @interface BDImageView: UIImageView
 - (void)handleLongPress:(UILongPressGestureRecognizer *)sender;
@@ -308,8 +311,6 @@
 @property(nonatomic, assign) BOOL elementsHidden;
 @property (nonatomic, strong) JGProgressHUD *hud;
 @property (nonatomic, retain) NSString *fileextension;
-- (void)addHandleLongPress;
-- (void)handleLongPress:(UILongPressGestureRecognizer *)sender;
 - (void)addHideElementButton;
 - (void)hideElementButtonHandler:(UIButton *)sender;
 - (void)addDownloadButton;
